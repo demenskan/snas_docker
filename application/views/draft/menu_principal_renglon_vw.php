@@ -1,0 +1,10 @@
+		<tr>
+			{BLOQUE_ICONOS}
+				{ICONOS}
+			{/BLOQUE_ICONOS}
+		</tr>
+		<tr>
+			{BLOQUE_CAPTIONS}
+				{CAPTIONS}
+			{/BLOQUE_CAPTIONS}
+		</tr>

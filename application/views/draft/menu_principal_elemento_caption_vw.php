@@ -1,0 +1,1 @@
+<td align="center">{INICIO_HREF}{CAPTION}{FIN_HREF}</td>

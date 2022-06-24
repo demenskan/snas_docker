@@ -1,0 +1,1 @@
+<td align="center">{INICIO_HREF}<img src="{IMG}" border="0" />{FIN_HREF}</td>

@@ -1,0 +1,266 @@
+<?php
+
+	class Tools_lib {
+	
+		private $CI;
+	
+		function __construct() {
+			$this->CI=& get_instance();
+		}
+			
+		function genera_combo ($pasEntradas) {
+			if (isset($pasEntradas['id']))
+				$sHtmlId=' id="'.$pasEntradas['id'].'"';
+			else
+				$sHtmlId='';
+			$sSalida="	<select name=\"".$pasEntradas['nombre']."\"".$sHtmlId.">\n";
+			if (isset($pasEntradas['opcion_extra']))
+				$sSalida.="\t\t<option value=\"__EXTRA__\" selected=\"selected\">".$pasEntradas["opcion_extra"]."</option>\n";
+			if (!isset($pasEntradas['datos'])) {
+				$asTabla=$this->regresa_tabla($pasEntradas);
+				if (!isset($asTabla['ERROR'])) {
+					for ($i=0;$i<count($asTabla);$i++) {
+						if (isset($pasEntradas['default']))
+							if ($pasEntradas['default']==$asTabla[$i][$pasEntradas["campo_clave"]])
+								$sSeleccionado="selected=\"selected\"";
+							else
+								$sSeleccionado="";
+						else
+							$sSeleccionado="";
+						$sSalida.="\t\t<option value=\"".$asTabla[$i][$pasEntradas["campo_clave"]]."\" ".$sSeleccionado.">".$asTabla[$i][$pasEntradas["leyenda"]]."</option>\n";
+					}
+					$sSalida.="	</select>\n";
+				}	
+				else
+					$sSalida=$asTabla['ERROR'];
+			}
+			else {
+				$asTabla=$pasEntradas['datos'];
+				foreach ($asTabla as $key => $value) {
+					if (isset($pasEntradas['default']))
+						if ($pasEntradas['default']==$key)
+							$sSeleccionado="selected=\"selected\"";
+						else
+							$sSeleccionado="";
+					else
+						$sSeleccionado="";
+					$sSalida.="\t\t<option value=\"".$key."\" ".$sSeleccionado.">".$value."</option>\n";
+				}
+				$sSalida.="	</select>\n";
+			}
+			return ($sSalida);
+		}
+	
+	
+		function regresa_tabla ($pasOpciones) {
+			$sCondiciones=isset($pasOpciones['condiciones']) ? " WHERE ".$pasOpciones['condiciones'] : "" ;
+			$sOrden=isset($pasOpciones['orden']) ? " ORDER BY ".$pasOpciones['orden'] : "" ;
+			if (isset($pasOpciones["DB"]))
+				$oConn=$this->CI->load->database($pasOpciones["DB"], true);
+			else
+				$oConn=$this->CI->load->database($this->CI->session->userdata('APP_DB'), true);
+			$sQy="SELECT ".$pasOpciones['campo_clave'].", ".$pasOpciones['leyenda']." FROM ".$pasOpciones['tabla'].$sCondiciones.$sOrden;
+			if ($rRec=$oConn->query($sQy)) {
+				$iCont=0;
+				foreach ($rRec->result_array() as $aoFila) {
+					$asSalida[$iCont]=$aoFila;
+					$iCont++;
+				}
+				$rRec->free_result();
+			}
+			else 
+				$asSalida=array (
+						'ESTATUS' => -1,
+						'MENSAJE' =>  mysql_errno().":".mysql_error()
+				);
+				
+			return ($asSalida);
+		}
+		
+		function consulta ($pasOpciones) {
+			//var_dump($this->CI->session->userdata('APP_DB'));
+			if (!isset($pasOpciones['UNICA_FILA']))
+				$pasOpciones['UNICA_FILA']=false;
+			if (isset($pasOpciones['DB']))
+				$oConn=$this->CI->load->database($pasOpciones['DB'], true);
+			else
+				$oConn=$this->CI->load->database('default', true);
+			$sQy=$pasOpciones['QUERY'];
+			$oConn->query("SET NAMES 'utf8'");
+			
+			if ($rRec=$oConn->query($sQy)) {
+				if (!$pasOpciones['UNICA_FILA']) {
+					$iCont=0;
+					foreach ($rRec->result_array() as $aoFila) {
+						$asDatos[$iCont]=$aoFila;
+						$iCont++;
+					}
+					if ($iCont==0)
+						$asSalida= array( 'ESTATUS' => 0 , 'MENSAJE'=>'VACIO', 'DATOS' => '');
+					else
+						$asSalida= array( 'ESTATUS' => 1 , 'MENSAJE'=>'OK', 'DATOS' => $asDatos);
+				}
+				else {
+					if ($rRec->num_rows()>0) {
+						$asDatos=$rRec->row_array();
+						$asSalida= array( 'ESTATUS' => 1 , 'MENSAJE'=>'OK', 'DATOS' => $asDatos);
+					}
+					else {
+						$asSalida['MENSAJE']='VACIO';
+						$asSalida= array( 'ESTATUS' => 0 , 'MENSAJE'=>'VACIO', 'DATOS' => '');
+					}
+				}
+				$rRec->free_result();
+			}
+			else 
+				$asSalida=array (
+						'ESTATUS'   => -1, 
+						'MENSAJE' => "Error en la base" ,
+						'ERROR' => mysql_errno().": ".mysql_error()."\n".$sQy
+				);
+			return ($asSalida);
+		}
+		
+		function ejecutar_query ($pasOpciones) {
+			if (isset($pasOpciones['DB']))
+				$oConn=$this->CI->load->database($pasOpciones['DB'], true);
+			else
+				$oConn=$this->CI->load->database($this->CI->session->userdata('APP_DB'), true);
+			$oConn->query("SET NAMES 'utf8'");	
+			$sQy=$pasOpciones['QUERY'];
+			if ($rRec=$oConn->query($sQy)) {
+				$asSalida=array ('ESTATUS' => 1, 'MENSAJE'=>'OK', 'NUEVO_ID' => $oConn->insert_id());
+			}
+			else 
+				$asSalida=array ('ESTATUS' => 0, 'MENSAJE' => mysql_errno().": ".mysql_error()."\n".$sQy);
+			return ($asSalida);
+		}
+		
+		function consulta_rapida ($pasOpciones) {
+			if (isset($pasOpciones['DB']))
+				$oConn=$this->CI->load->database($pasOpciones['DB'], true);
+			else
+				$oConn=$this->CI->load->database($this->CI->session->userdata('APP_DB'), true);
+			if (!isset($pasOpcionces['QUERY']))	
+				$sQy='SELECT '.$pasOpciones['campo_valor'].' FROM '.$pasOpciones['tabla']
+					.' WHERE '.$pasOpciones['campo_clave'].'=\''.$pasOpciones['valor'].'\' LIMIT 0,1';
+			else
+				$sQy=$pasOpcionces['QUERY'];
+				
+			if ($rRec=$oConn->query($sQy)) {
+				foreach ($rRec->result_array() as $aoFila) {
+					$sSalida=$aoFila[$pasOpciones['campo_valor']];
+				}
+				$rRec->free_result();
+			}
+			else 
+				$sSalida='ERROR';
+			return ($sSalida);
+		}	
+	
+
+		function dump ($paInput, $psLeyenda="DUMP") {
+			$sSalida="<style> \n"
+				."	.Dump {   margin: 5px 5px 5px 5px;  border-spacing: 1px;  font-size: 0.8em;  background-color: #FFF6BF; } \n" 
+				."	.Dump .non { background-color: #F6EAB6;  } \n"
+				."	.Dump .par { background-color: #FFFACA; } \n "
+				."	</style>\n"
+				."<table class=\"Dump\">\n"
+				."<thead><th colspan=\"2\">".$psLeyenda."</th></thead>\n";
+			$sClase="par";		
+			foreach($paInput as $key => $value) {
+				if (!is_array($value))
+					$sSalida.="<tr class=\"".$sClase."\"><td>".$key."</td><td>".$value."</td>\n";
+				else {
+					$sSubArray="<table class=\"".$sClase."\">\n";
+					foreach ($value as $xKey => $xValue) {
+						$sSubArray.="<tr><td>".$xKey."</td><td>".$xValue."</td></tr>\n";
+					}
+					$sSubArray.="</table>";
+					$sSalida.="<tr><td>".$key."</td><td>".$sSubArray."</td>\n";
+				}
+				$sClase=($sClase=="par") ? "non" : "par";
+			}
+			$sSalida.="</table>";
+			echo ($sSalida);
+		}
+		
+
+		
+		function alfanumerico_espacios ($psInput) {
+		// Valida si $psInput solamente tiene caracteres alfabeticos, numeros y espacios. Cualquier otra cosa devuelve FALSE.
+		// Si $psInput esta vacia, devuelve TRUE
+			if ($psInput=="")
+				return TRUE;
+			else {
+				if (! preg_match("/^[a-zA-Z0-9 ]+$/", $psInput)) {
+					$this->form_validation->set_message('alfanumerico_espacios', 'El campo %s solo puede contener letras, numeros y espacios.');
+					return FALSE;
+				}
+				else
+					return TRUE;
+			}
+		}
+		
+		function genera_reporte ($pasInput) {
+			$sTabs="\t\t\t\t\t\t";
+			$sClase="";
+			if (isset($pasInput['QUERY']))
+				$asResult=$this->regresa_tabla_query($pasInput);
+			else
+				$asResult=array ('ESTATUS'=> $pasInput['DATOS']['ESTATUS'], 'DATOS'=>$pasInput['DATOS']['DATOS']);
+			if (isset($pasInput['ANCHO']))
+				$sAncho=$pasInput['ANCHO'];
+			else
+				$sAncho="100%";
+			$sSalida=$sTabs."<table class=\"Reportes\" width=\"".$sAncho."\">\n"
+					.$sTabs."	<thead>\n"
+					.$sTabs."		<tr>\n"
+					.$sTabs."			<th colspan=\"99\">".$pasInput['TITULO']."</th>\n"
+					.$sTabs."		</tr>\n"
+					.$sTabs."	</thead>\n"
+					.$sTabs."	<tbody>\n";
+			switch ($asResult['ESTATUS']) {
+				case 1:
+					for ($i=0;$i<count($asResult['DATOS']);$i++) {
+						if ($i==0) {  // pone los titulos de los campos
+							$sSalida.=$sTabs."	<tr class=\"titulo\">\n";
+							foreach ($asResult['DATOS'][0] as $key => $value) {
+								$sSalida.=$sTabs."		<td>".substr($key,3)."</td>\n";
+							}
+							$sSalida.=$sTabs."	</tr>\n";
+						}
+						$sClase=($sClase=="non") ? "par" : "non";
+						$sSalida.=$sTabs."	<tr class=\"".$sClase."\">\n";
+						foreach ($asResult['DATOS'][$i] as $key => $value) {
+							$sPrefijo=substr($key, 0,2);
+							switch ($sPrefijo) {
+								case 'TX':	$sSalida.=$sTabs."		<td>".$value."</td>\n"; break; //texto
+								//case 'FE':	$sSalida.=$sTabs."		<td>".$value."</td>\n"; break;
+								case 'FE':	$sSalida.=$sTabs."		<td>".date("d M Y",strtotime($value))."</td>\n"; break; //fecha
+								case 'MO':	$sSalida.=$sTabs."		<td>$".$value."</td>\n"; break; //Moneda
+								case 'NU':	$sSalida.=$sTabs."		<td align=\"right\">".$value."</td>\n"; break; //Numero
+								case 'CB':	$sSalida.=$sTabs."		<td><input type=\"checkbox\" name=\"chkRep".$value."\"></td>\n"; break; //CheckBox
+								  default:	$sSalida.=$sTabs."		<td>".$value."</td>\n"; break;
+							}
+						}
+						$sSalida.=$sTabs."	</tr>\n";
+					}
+				break;
+				case 0:
+					$sSalida.=$sTabs."	<tr><td>No hay resultados</td></tr>\n";
+				break;
+				case -1:
+					$sSalida.=$sTabs."	<tr><td>".$asResult['MENSAJE']."</td></tr>\n";
+				break;
+			}
+			$sSalida.=$sTabs."	</tbody>\n"
+					 .$sTabs."</table>\n";
+			return ($sSalida);
+		}
+
+	
+	
+	}
+
+?>

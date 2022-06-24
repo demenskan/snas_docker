@@ -1,0 +1,34 @@
+# version isn't needed as of 2020 for docker compose CLI. 
+# All 2.x and 3.x features supported
+# version: '2'
+
+services:
+
+  snasapp:
+    build: . 
+    ports:
+      - 8080:80
+    environment:
+      SNAS_DB_HOST: snas_mysql
+      SNAS_DB_NAME: snas_ci
+      SNAS_DB_USER: snas_ci
+      SNAS_DB_PASS: "QAd@23232dda/."
+      SNAS_ENVIRONMENT: development
+    volumes:
+      - .:/var/www/html
+
+  snas_mysql:
+    # we sue mariadb here for arm support
+    # mariadb is a fork of MySQL that's often faster and better multi-platform
+    image: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: examplerootPW
+      MYSQL_DATABASE: snas_ci
+      MYSQL_USER: snas_ci
+      MYSQL_PASSWORD: "QAd@23232dda/." 
+    volumes:
+      - ./scripts_db:/docker-entrypoint-initdb.d
+      - snas-mysql-data:/var/lib/mysql
+
+volumes:
+  snas-mysql-data:
