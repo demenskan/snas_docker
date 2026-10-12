@@ -15114,7 +15114,12 @@ CREATE TABLE `ci_sessions` (
 LOCK TABLES `ci_sessions` WRITE;
 /*!40000 ALTER TABLE `ci_sessions` DISABLE KEYS */;
 INSERT INTO `ci_sessions` VALUES
-('200eeff90bb982138656f12f3d8acfeb','172.23.0.1','Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:152.0) ',1784247834,'a:1:{s:8:\"sUsuario\";s:9:\"demenskan\";}');
+('2cbe73e46b5189c3261e86e995d2bb23','172.23.0.1','Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:157.0) ',1791845860,NULL),
+('1865a4fc6ece1aeee1ea930a0ad37140','172.23.0.1','Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:157.0) ',1791047169,'a:1:{s:8:\"sUsuario\";s:9:\"demenskan\";}'),
+('a844107e3442090f64aa37baadb68786','172.23.0.1','Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:152.0) ',1786305056,'a:1:{s:8:\"sUsuario\";s:9:\"demenskan\";}'),
+('c592b29a94c867bf5cea91a7217e0f2c','172.23.0.1','Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:152.0) ',1785889519,NULL),
+('200eeff90bb982138656f12f3d8acfeb','172.23.0.1','Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:152.0) ',1784247834,'a:1:{s:8:\"sUsuario\";s:9:\"demenskan\";}'),
+('f04e1a93c55496731b62b2bbd1ecab67','172.23.0.1','Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:152.0) ',1786058461,NULL);
 /*!40000 ALTER TABLE `ci_sessions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -59047,4 +59052,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-07-17  0:47:35
+-- Dump completed on 2026-10-12 23:08:52
